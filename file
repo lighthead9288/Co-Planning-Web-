@@ -1,0 +1,24 @@
+			.container
+				a(data-toggle="modal" href="#normalModal" class="btn btn-default") Add
+				br
+				br
+			#normalModal(class="modal fade")
+				div(class="modal-dialog")
+					div(class="modal-content")
+						div(class="modal-header")
+							button(type="button" class="close" data-dismiss="modal" aria-hidden="true") &times;
+							h4(class="modal-title") Title
+							
+						div(class="modal-body")
+							input(type="text" id="name" placeholder="Enter task name")
+							input(type="text" id="comment" placeholder="Enter comment")
+							input(type="text" id="date" placeholder="Enter task date")
+							input(type="text" id="time" placeholder="Enter task time")
+							input(type="text" id="duration" placeholder="Enter task duration")
+							input(type="checkbox" id="visibility")
+							label(for="visibility") Is task visible?
+							input(type="checkbox" id="editable")
+							label(for="editable") Is task editable?
+							div(class="modal-footer")
+							button(type="button" class="btn btn-default" data-dismiss="modal") Close
+							button(type="button" onclick="test()" class="btn btn-primary") Submit

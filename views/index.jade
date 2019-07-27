@@ -1,0 +1,131 @@
+extends layout
+
+block content
+	div
+		-if (!user)
+			p  Unknown foolish
+		-if (user)
+			h1 Name: #{user.name}
+			h1 Surname: #{user.surname}
+			-console.log(user);
+
+			#userMeta
+				meta(data-userJSON=JSON.stringify(user))
+
+			div(class="buttonsPanel")
+				img(src="plus.png" alt="Add task" hspace="2" onclick='OpenModal("/addTask")' align="center" title="Add task")
+				img(src="sleep.png" alt="Edit unavailable time" hspace="2" onclick='OpenUnavailableTimeEditModal()' align="center" title="Edit unavailable time")
+				//button(type="button" onclick='OpenUnavailableTimeEditModal()') Edit unavailable time
+				//button(type="button" onclick='OpenModal("/addTask")' style="width:auto;") Add task
+
+			div(id="modalUnavailableTimeEdit" class="modal")
+				form(class="unavailableTime-modal-content animate" id="unavailableTimeEditOperation")
+					//label(class="float-modal-close" onclick="document.getElementById('modalUnavailableTimeEdit').style.display='none'")&#10005
+					br
+					h2(align="center") Unavailable time
+					div(class="container")
+						div(id="unavailableTime")
+						br
+						button(type="button" class="btn btn-primary" id="unavailableTimeSubmit" onclick='SaveUnavailableTime()' style="margin-right:4px;") Save
+						button(type="button" class="btn btn-default" data-dismiss="modal" onclick="document.getElementById('modalUnavailableTimeEdit').style.display='none'") Close
+
+			h1(class="hidden" id="curUserId") #{user.username}
+			br
+			br
+			div(class="grid-container")
+				div(class="grid-item" style="min-width: 450px;")
+					h1 My tasks
+					div(id="modalTaskForm" class="modal")
+						form(class="modal-content animate" id="taskOperation")
+							h2(align="center") Task editor
+							div(class="container")
+								br
+								input(type="text" name="name" placeholder="Enter task name" id="name" style="border: 2px solid black;")
+								br
+								br
+								textarea(type="text" name="comment" placeholder="Enter comment" id="comment" style="border: 2px solid black;")
+								br
+								br
+								input(type="date" name="dateFrom" placeholder="Enter task begin date" id="dateFrom" style="border: 2px solid black;")
+								br
+								br
+								input(type="time" name="timeFrom" placeholder="Enter task begin time" id="timeFrom" style="border: 2px solid black;")
+								br
+								br
+								input(type="date" name="dateTo" placeholder="Enter task end date" id="dateTo" style="border: 2px solid black;")
+								br
+								br
+								input(type="time" name="timeTo" placeholder="Enter task end time" id="timeTo" style="border: 2px solid black;")
+								br
+								br
+								input(type="checkbox" name="visibility" id="visibility")
+								label(for="visibility") Is task visible?
+								br
+								br
+								input(type="checkbox" name="editable" id="editable")
+								label(for="editable") Is task editable?
+								input(type="hidden" name="editedTask" id="editedTask")
+								br
+								br
+								button(type="submit" class="btn btn-primary" id="taskSubmit" style="margin-right:4px;") Save
+								button(type="button" class="btn btn-default" data-dismiss="modal" onclick="document.getElementById('modalTaskForm').style.display='none'" style="align-self: center;") Close
+					div(id="taskList")
+						-var curUserTaskList = user.taskList;
+						-for(let i=0;i<curUserTaskList.length;i++) {
+							+addTask(curUserTaskList[i], i)
+
+						-}
+				div(class="grid-item" style="min-width: 450px;")
+					h1 Search
+					form
+						p
+							input(type="search" class="search" name="q" placeholder="Enter user name..." id="searchInput" onkeyup="Search(this)")
+					div(id="foundedUsersList")
+
+				div(class="grid-item")
+					h1 Mappings
+					div(id="MappingList")
+					input(type="checkbox" name="IncludeMyselfToMapping" id="includeMyselfToMapping" onchange='IncludeMyselfToMappingChanged(this)')
+					label(for="includeMyselfToMapping") Include myself to mapping
+					br
+					input(type="date" name="mappingDateFrom" id="mappingDateFrom" style="visibility: hidden; border: 2px solid black;" title="Date from")
+					br
+					br
+					input(type="time" name="mappingTimeFrom"  id="mappingTimeFrom" style="visibility: hidden; border: 2px solid black;" title="Time from")
+					br
+					br
+					input(type="date" name="mappingDateTo" id="mappingDateTo" style="visibility: hidden; border: 2px solid black;" title="Date to")
+					br
+					br
+					input(type="time" name="mappingTimeTo" id="mappingTimeTo" style="visibility: hidden; border: 2px solid black;" title="Time to")
+					br
+					br
+					button(type="button" class="mappingButton" id="mapSchedules" style="visibility: hidden;" onclick='OnMapSchedulesClick()') Map schedules
+					div(id="MappingResults")
+
+
+
+
+	mixin addTask(task, taskNumber)
+		div(class="taskBox")
+				div(id="taskName" style="text-decoration: underline;")=task.name
+				div
+					img(src="date-from-32.png" alt="From: ")
+					div(id="taskFromDate")=task.dateFrom+", "+task.timeFrom
+					img(src="date-to-32.png" alt="To: ")
+					div(id="taskToDate")=task.dateTo+", "+task.timeTo
+				div(id="taskComment" style="border-top:3px double white; border-bottom:3px double white;")=task.comment
+				br
+				form(action="/deleteTask" id="deleteTask")
+					input(type="hidden" name="taskId" value=taskNumber id="taskId")
+					input(type="image" src="delete-32.png" align="right" alt="Delete" hspace="4")
+					img(src="edit-32.png" align="right" alt="Edit" hspace="2" id=taskNumber onclick="OpenModalWithParams(this.id)")
+					//button(type="submit" class="btn btn-primary" id="deleteSubmit") Delete
+					//button(type="button" class="btn btn-primary" id=taskNumber onclick='OpenModalWithParams(this.id)') Edit
+
+		br
+		br
+
+	script(src="/socket.io/socket.io.js")
+	script(src="//code.jquery.com/jquery-1.11.3.min.js")
+	script(src="client.js")

@@ -1,0 +1,305 @@
+body {
+  background-color: #eee;
+}
+
+.form-signin {
+  max-width: 330px;
+  padding: 15px;
+  margin: 0 auto;
+}
+.form-signin .form-signin-heading,
+.form-signin .checkbox {
+  margin-bottom: 10px;
+}
+.form-signin .checkbox {
+  font-weight: normal;
+}
+.form-signin .form-control {
+  position: relative;
+  height: auto;
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+  padding: 10px;
+  font-size: 16px;
+}
+.form-signin .form-control:focus {
+  z-index: 2;
+}
+.form-signin input[type="email"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.form-signin input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+
+
+
+
+ .modal-close {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                font-size: 22px;
+                color: black;
+                opacity: 1;
+                transition: color 200ms,
+                          transform 500ms;
+            }
+.modal-close:hover,
+.modal-close:focus {
+                color: black;
+                opacity: 0.3;
+            }
+
+
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto 15% auto; /* 5% from the top, 15% from the bottom and centered */
+  border: 1px solid #888;
+  width: 15%; /* Could be more or less, depending on screen size */
+  padding: 5px;
+  overflow:hidden;
+}
+
+.unavailableTime-modal-content {
+  background-color: #fefefe;
+  margin: 5% auto 15% auto; /* 5% from the top, 15% from the bottom and centered */
+  border: 1px solid #888;
+  width: 30%; /* Could be more or less, depending on screen size */
+  border-radius: 5px;
+  padding: 5px;
+  overflow:hidden;
+}
+
+.buttonsPanel {
+  width: 25%;
+  border-radius: 5px;
+  padding: 5px;
+  transition: opacity 500ms;
+  opacity:0.4;
+}
+.buttonsPanel:hover {
+  //border: 2px solid green;
+  //transform: scale(1.1,1.1);
+  opacity:1;
+}
+
+.singleButton {
+  transition: opacity 500ms;
+  opacity:0.4;
+}
+.singleButton:hover {
+  opacity:1;
+}
+
+.taskTable {
+  font-family: Comic Sans MS, Comic Sans, cursive;
+}
+
+.mappingButton {
+  -moz-box-shadow: 3px 1px 0px 0px #8a2a21;
+	-webkit-box-shadow: 3px 1px 0px 0px #8a2a21;
+	box-shadow: 3px 1px 0px 0px #8a2a21;
+	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #c62d1f), color-stop(1, #f24437));
+	background:-moz-linear-gradient(top, #c62d1f 5%, #f24437 100%);
+	background:-webkit-linear-gradient(top, #c62d1f 5%, #f24437 100%);
+	background:-o-linear-gradient(top, #c62d1f 5%, #f24437 100%);
+	background:-ms-linear-gradient(top, #c62d1f 5%, #f24437 100%);
+	background:linear-gradient(to bottom, #c62d1f 5%, #f24437 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#c62d1f', endColorstr='#f24437',GradientType=0);
+	background-color:#c62d1f;
+	-moz-border-radius:13px;
+	-webkit-border-radius:13px;
+	border-radius:13px;
+	border:3px solid #d02718;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Arial;
+	font-size:26px;
+	padding:12px 106px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #810e05;
+}
+.mappingButton:hover {
+  background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #f24437), color-stop(1, #c62d1f));
+	background:-moz-linear-gradient(top, #f24437 5%, #c62d1f 100%);
+	background:-webkit-linear-gradient(top, #f24437 5%, #c62d1f 100%);
+	background:-o-linear-gradient(top, #f24437 5%, #c62d1f 100%);
+	background:-ms-linear-gradient(top, #f24437 5%, #c62d1f 100%);
+	background:linear-gradient(to bottom, #f24437 5%, #c62d1f 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#f24437', endColorstr='#c62d1f',GradientType=0);
+	background-color:#f24437;
+}
+.mappingButton:active {
+	position:relative;
+	top:1px;
+}
+
+
+
+
+.grid-container {
+  display: grid;
+  grid-template-columns: auto auto auto;
+}
+
+.grid-item {
+  text-align: left;
+}
+
+h1.hidden {
+  visibility: hidden;
+}
+
+
+
+.taskBox {
+  background-color: #444;
+  border-radius: 5px;
+  color: #fff;
+  width: 73%;
+  height:auto;
+  font-size: 150%;
+  border: 8px solid black;
+  overflow: hidden;
+  word-wrap: break-word;
+  padding:5px;
+  max-width:275px;
+}
+
+.foundedUser {
+  border: 1px solid black;
+   max-width:300px;
+   padding: 12px 20px 12px 10px;
+   border-radius: 4px;
+   position:relative;
+}
+
+.miniTaskBox {
+  border: 1px solid black;
+  border-radius: 4px;
+  padding: 12px 20px 12px 10px;
+  position:relative;
+}
+
+.search {
+  width: 300px;
+  box-sizing: border-box;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  font-size: 20px;
+  background-color: white;
+//  background-image: url('binoculars.png');
+//  background-position: 10px 10px;
+  background-repeat: no-repeat;
+  padding: 12px 20px 12px 10px;
+  -webkit-transition: width 0.4s ease-in-out;
+  transition: width 0.4s ease-in-out;
+}
+
+.search:focus {
+  border: 3px solid #444;
+}
+
+.mapElement {
+    background: #444; /* Цвет фона */
+    color: white; /* Цвет текста */
+    padding: 10px; /* Поля вокруг текста */
+    border-radius: 5px; /* Уголки */
+    border: 5px solid #c62d1f;
+    font-size:200%
+   }
+ .unavailableTime {
+    background: #999; /* Цвет фона */
+    color: black; /* Цвет текста */
+    padding: 10px; /* Поля вокруг текста */
+    border-radius: 5px; /* Уголки */
+    font-size:100%;
+    width: 40%;
+  }
+
+.close {
+     position: inherit;
+     right: 32px;
+     top: 32px;
+     width: 32px;
+     height: 32px;
+     opacity: 0.3;
+   }
+   .close:hover {
+     opacity: 1;
+   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   .sidebar {
+     grid-area: sidebar;
+   }
+
+   .content {
+       grid-area: content;
+       word-wrap: break-word;
+   }
+
+   .header {
+       grid-area: header;
+   }
+
+   .footer {
+       grid-area: footer;
+   }
+   .footerEd {
+       grid-area: footerEd;
+   }
+   .wrapper {
+       display: grid;
+       grid-gap: 5px;
+       grid-template-columns: 120px 120px 120px;
+       grid-template-areas:
+       "....... header header"
+       "sidebar content content"
+       "sidebar content content"
+       "sidebar content content"
+       "footer  footer  footer"
+       "footerEd  footerEd  footerEd";
+       background-color: grey;
+       border-radius: 5px;
+       color: #444;
+   		width: 73%;
+       border: 5px solid black;
+   }
+
+   .box {
+     background-color: #444;
+     color: #fff;
+     border-radius: 5px;
+     padding: 10px;
+     font-size: 150%;
+   }
+
+
+.header,
+.footer,
+.footerEd {
+  background-color: #999;
+}
