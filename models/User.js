@@ -17,7 +17,9 @@ var UserSchema = new Schema({
         to: String
       },
     custom:Array
-  }
+  },
+  notificationsList: Array,
+  searchesList: Array
 });
 
 UserSchema.plugin(passportLocalMongoose);

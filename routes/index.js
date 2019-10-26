@@ -37,13 +37,23 @@ router.get('/subscribe', schedule.subscribe);
 router.get('/unsubscribe', schedule.unsubscribe);
 
 
+router.get('/api/extGetUserTaskList', schedule.extGetTaskList);
+
+router.post('/api/extAddTask', schedule.extAddTask);
+
+router.post('/api/extDeleteTask', schedule.extDeleteTask);
+
+router.post('/api/extEditTask', schedule.extEditTask);
+
 router.get('/api/extGetReportIntervals', schedule.extGetReportIntervals);
 
 router.get('/api/extGetUserTaskFreeTime', schedule.extGetUserTaskFreeTime);
 
-router.post('/api/setUserUnavailableTime', schedule.setUserUnavailableTime);
+router.post('/api/extSetUserUnavailableTime', schedule.extSetUserUnavailableTime);
 
-router.post('/api/setUserTaskList', schedule.setUserTaskList);
+router.get('/api/extGetUserUnavailableTime', schedule.extGetUserUnavailableTime);
+
+router.post('/api/extSetUserTaskList', schedule.extSetUserTaskList);
 
 router.post('/api/extRegister', auth.extRegister);
 

@@ -1,6 +1,5 @@
 var mongoose = require("mongoose");
 var passport = require("passport");
-var bcrypt = require("bcrypt");
 
 var User = require("../models/User");
 var UserSocket = require("../models/UserSocket");
@@ -17,7 +16,9 @@ userController.extRegister = function(req, res) {
 								surname: req.body.surname,
 								taskList: new Array(),
                 subscriberList: new Array(),
-                unavailableTime: {"default":{"from":String, "to":String}, "custom": new Array()}
+                unavailableTime: {"default":{"from":String, "to":String}, "custom": new Array(),
+                notificationsList: new Array(),
+                searchesList: new Array()}
 								}),
   req.body.password,  function(err, user) {
     if (err) {
@@ -71,7 +72,9 @@ userController.doRegister = function(req, res) {
 								surname: req.body.surname,
 								taskList: new Array(),
                 subscriberList: new Array(),
-                unavailableTime: {"default":{"from":String, "to":String}, "custom": new Array()}
+                unavailableTime: {"default":{"from":String, "to":String}, "custom": new Array(),
+                notificationsList: new Array(),
+                searchesList: new Array()}
 								}),
   req.body.password,  function(err, user) {
     if (err) {
@@ -178,13 +181,20 @@ userController.setIO = function(io, req) {
 
     socket.on('unavailableTime', function(username, unavailableTime){
       if (unavailableTime==null) {
+        console.log("Get unavailable time");
         scheduleController.getUserUnavailableTime(username, socket);
       }
-      else scheduleController.setUserUnavailableTime(username, unavailableTime);
+      else {
+        console.log("______________________________________");
+        console.log("Unavailable time:");
+        console.log(unavailableTime);
+        console.log("______________________________________");
+        scheduleController.setUserUnavailableTime(username, unavailableTime);
+      }
     });
 
     //socket.on('mapping', function(mappingElements, dateTimeFrom, dateTimeTo) {
-      socket.on('mapping', function(mappingData) {
+      socket.on('mapping', function(mappingData, username) {
 
 
       //var from = new Date(dateTimeFrom);
@@ -200,17 +210,14 @@ userController.setIO = function(io, req) {
       var to = scheduleController.getDateTime(mappingData.dateTo, mappingData.timeTo);
       var mappingElements = mappingData.users;
 
-      //  var intervals = scheduleController.getReportIntervals(mappingElements, new Date('2019-03-06T10:30:00.000Z'), new Date('2019-03-08T20:35:00.000Z'), socket);
-      var intervals = scheduleController.getReportIntervals(mappingElements, from, to, socket);
+      var intervals = scheduleController.getReportIntervals(mappingElements, from, to, socket, username);
       intervals
         .then(
           result => {
-            // первая функция-обработчик - запустится при вызове resolve
-            console.log(result); // result - аргумент resolve
+            console.log(result);
           },
           error => {
-            // вторая функция - запустится при вызове reject
-            console.log(error); // error - аргумент reject
+            console.log(error);
           }
         );
     });
@@ -228,6 +235,14 @@ userController.setIO = function(io, req) {
       scheduleController.getTaskById(user,id,socket);
     });
 
+    socket.on('notifications', function(username) {
+      scheduleController.getNotifications(username, socket);
+    });
+
+    socket.on('changeNotificationStatus', function(username, dateTime) {
+      scheduleController.changeNotificationStatus(username, dateTime);
+    })
+
     socket.on('subscribe', function(receiver, transmitter, direction, taskNumber) {
 
       if (direction) {
@@ -240,6 +255,13 @@ userController.setIO = function(io, req) {
       }
 
     });
+
+    socket.on('getUserSearchesList', function(username) {
+
+      scheduleController.getUserSearchesList(username, socket);
+    });
+
+
 
 
   });

@@ -13,6 +13,8 @@ var user = JSON.parse(
 );*/
 
 document.addEventListener('DOMContentLoaded', function () {
+  var user = GetCurUser();
+  socket.emit('getUserSearchesList', user);
   if (!Notification) {
     alert('Desktop notifications not available in your browser. Try Chromium.');
     return;
@@ -316,6 +318,10 @@ function OpenModal(operation, tName, tComment, tDateFrom, tTimeFrom, tDateTo, tT
       element.style.visibility = "hidden";
   }
 
+  socket.on('getUserSearchesList', function(searchesList) {
+    console.log(searchesList);
+  });
+
   socket.on('subscribe', function(subscribeReceiver, newSubscriber, event, task) {
     if (task===undefined) {
       var eventView = event?" subscribed on ":" unsubscribed from ";
@@ -362,7 +368,7 @@ function OpenModal(operation, tName, tComment, tDateFrom, tTimeFrom, tDateTo, tT
     }
   });
 
-  socket.on('changes'+"_"+document.getElementById('curUserId').textContent, function(from, changeDescription) {
+  socket.on('changes'+"_"+document.getElementById('curUserId').textContent, function(from, changeDescription, curDate) {
     console.log("From user " + from + ": " + changeDescription);
     //console.log("Current user is " + document.getElementById('curUserId').textContent);
 
@@ -578,7 +584,10 @@ function OnMapSchedulesClick() {
 //	console.log(mappingElements);
   var mappingData = {"dateFrom": dateFrom, "timeFrom": timeFrom, "dateTo": dateTo, "timeTo": timeTo, "users": mappingElements};
   //socket.emit('mapping', mappingElements, dateTimeFrom, dateTimeTo);
-  socket.emit('mapping', mappingData);
+  var user = GetCurUser();
+
+  socket.emit('mapping', mappingData, user);
+
 }
 
 function GetDateTime(date, time) {

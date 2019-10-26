@@ -72,7 +72,7 @@ block content
 					div(id="taskList")
 						-var curUserTaskList = user.taskList;
 						-for(let i=0;i<curUserTaskList.length;i++) {
-							+addTask(curUserTaskList[i], i)
+							+addTask(curUserTaskList[i], curUserTaskList[i].taskNumber)
 
 						-}
 				div(class="grid-item" style="min-width: 450px;")

@@ -1,8 +1,99 @@
 var mongoose = require("mongoose");
 var User = require("../models/User");
+var _ = require('lodash');
 
 var scheduleController = {};
 
+
+scheduleController.extAddTask = function(req, res) {
+
+		var username = req.body.username;
+		var newTask = req.body.task;
+
+		User.findOne({username:username}, function(err, user){
+			if(err) return console.log(err);
+			scheduleController.addTaskCommand(user, newTask);
+			res.send("Sucess!!!");
+		});
+}
+
+scheduleController.extDeleteTask = function(req, res) {
+
+	var username = req.query.username;
+	var taskId = req.query.taskId;
+
+	User.findOne({username:username}, function(err, user){
+		if(err) return console.log(err);
+		scheduleController.deleteTaskCommand(user, taskId);
+		res.send("Sucess!!!");
+	});
+
+}
+
+scheduleController.extEditTask = function(req, res) {
+
+	var username = req.body.username;
+	var task = req.body.task;
+	var taskId = req.body.taskId;
+
+	console.log(task);
+
+	User.findOne({username:username}, function(err, user){
+		if(err) return console.log(err);
+		//var taskId = parseInt(task.editedTask);
+		scheduleController.editTaskCommand(user, task, taskId);
+		res.send("Sucess!!!");
+	});
+
+}
+
+scheduleController.extGetTaskList = function(req, res) {
+
+	var username = req.query.username;
+	var dateFrom = req.query.dateFrom;
+	var timeFrom = req.query.timeFrom;
+	var dateTo = req.query.dateTo;
+	var timeTo = req.query.timeTo;
+
+	var dateTimeFrom = scheduleController.getDateTimeWithoutTimeClarify(dateFrom, timeFrom);
+	console.log(dateTimeFrom);
+	var dateTimeTo = scheduleController.getDateTimeWithoutTimeClarify(dateTo, timeTo, true);
+	console.log(dateTimeTo);
+
+	console.log(username);
+
+	User.findOne({username:username}, function(err, user){
+		if(err) return console.log(err);
+
+		var taskList = user.taskList;
+		var resTaskList = new Array();
+		for(let task of taskList) {
+			var curTaskDateTimeFrom = task.dateTimeFrom;
+
+			var condition;
+
+			if ((dateTimeFrom!=undefined)&&(dateTimeTo!=undefined))
+				condition = ((curTaskDateTimeFrom>=dateTimeFrom)&&(curTaskDateTimeFrom<dateTimeTo));
+			else if (dateTimeFrom!=undefined)
+				condition = (curTaskDateTimeFrom>=dateTimeFrom);
+			else if (dateTimeTo!=undefined)
+				condition = (curTaskDateTimeFrom<=dateTimeTo);
+			else break;
+
+			console.log(condition);
+
+			if (condition)
+				resTaskList[resTaskList.length] = task;
+		}
+
+		console.log(resTaskList);
+
+		var response = {"username": username, "taskList": resTaskList};
+
+		res.send(response);
+	});
+
+}
 
 
 scheduleController.extGetReportIntervals = function(req, res) {
@@ -51,14 +142,10 @@ scheduleController.extGetUserTaskFreeTime = function(req, res) {
 
 }
 
-scheduleController.setUserUnavailableTime = function(req, res) {
+scheduleController.extSetUserUnavailableTime = function(req, res) {
 
 	var unavailableTime = req.body.unavailableTime;
 	var username = req.body.username;
-	console.log(username);
-	console.log(unavailableTime);
-
-
 /*	var salt = req.user.salt;
 	var hash = req.user.hash;
 	var pswd = req.body.password;
@@ -74,7 +161,22 @@ scheduleController.setUserUnavailableTime = function(req, res) {
 
 }
 
-scheduleController.setUserTaskList = function(req, res) {
+scheduleController.extGetUserUnavailableTime = function(req, res) {
+	var username = req.query.username;
+
+	User.findOne({username: username}, function(err, user){
+		if(err) return console.log(err);
+		var response;
+		if (user!=null)
+			response = {"username": username, "unavailableTime": user.unavailableTime};
+		else
+			response = {"username": username, "unavailableTime": null};
+		res.send(response);
+	});
+
+}
+
+scheduleController.extSetUserTaskList = function(req, res) {
 
 	var username = req.body.username;
 	var taskList = req.body.taskList;
@@ -110,6 +212,7 @@ scheduleController.setUserTaskList = function(req, res) {
 							"dateTimeTo": dateTimeTo,
 							"visibility": task.visibility,
 							"editable": task.editable,
+							"completed" : task.completed,
 							"taskNumber":taskNumber,
 							"subscriberList":task.subscriberList
 		}
@@ -242,11 +345,49 @@ scheduleController.getAllUsers = function(req, res) {
 	}
 
 	scheduleController.getDateTime = function(date, time) {
-		if ((date!="")&&(time!="")) {
+		console.log("Date:");
+		console.log(date);
+		console.log("Time:");
+		console.log(time);
+		if ((date!="")&&(time!="")&&(date!=undefined)&&(time!=undefined)) {
 			var dateParts = date.split("-");
 			var timeParts = time.split(":");
 			var dateTime = new Date(dateParts[0], dateParts[1]-1, dateParts[2], timeParts[0], timeParts[1]);
 		//	console.log(time);
+			return dateTime;
+		}
+		else return undefined;
+		/*try {
+			var dateParts = date.split("-");
+			var timeParts = time.split(":");
+			var dateTime = new Date(dateParts[0], dateParts[1]-1, dateParts[2], timeParts[0], timeParts[1]);
+
+			return dateTime;
+		} catch (e) {
+				return undefined;
+
+		} finally {
+		}*/
+
+	}
+
+	scheduleController.getDateTimeWithoutTimeClarify = function(date, time, toUpperTimeBorder) {
+		if ((date!="")&&(date!=undefined)) {
+			var dateParts = date.split("-");
+
+			var timeParts;
+			var dateTime;
+			if ((time!="")&&(time!=undefined)) {
+				timeParts = time.split(":");
+				dateTime = new Date(dateParts[0], dateParts[1]-1, dateParts[2], timeParts[0], timeParts[1]);
+			}
+			else {
+				if (toUpperTimeBorder)
+					dateTime = new Date(dateParts[0], dateParts[1]-1, dateParts[2], 23, 59);
+				else
+					dateTime = new Date(dateParts[0], dateParts[1]-1, dateParts[2], 0, 0);
+			}
+
 			return dateTime;
 		}
 		else return undefined;
@@ -258,6 +399,8 @@ scheduleController.getAllUsers = function(req, res) {
 		var customIntervals = unavailableTime.custom;
 		var resultCustomIntervalsArray = new Array();
 		for(var intervals of customIntervals) {
+			console.log(intervals);
+
 			var customDateTimeFrom = scheduleController.getDateTime(intervals.dateFrom, intervals.timeFrom);
 			var customDateTimeTo = scheduleController.getDateTime(intervals.dateTo, intervals.timeTo);
 			console.log(customDateTimeFrom);
@@ -267,12 +410,16 @@ scheduleController.getAllUsers = function(req, res) {
 	        resultCustomIntervalsArray[resultCustomIntervalsArray.length] = {"from": customDateTimeFrom, "to": customDateTimeTo};
 
 		}
+		console.log("Result array:");
+		console.log(resultCustomIntervalsArray);
+
+		if ((resultCustomIntervalsArray.length==0)&&(customIntervals.length!=0)) return;
+
 		unavailableTime.custom = resultCustomIntervalsArray;
-		console.log(unavailableTime.custom);
 
 		User.updateOne({username:username}, {unavailableTime:unavailableTime}, function(err, user){
 					if(err) return console.log(err);
-					console.log(user)
+					console.log(user);
 			});
 	}
 
@@ -423,7 +570,7 @@ scheduleController.getAllUsers = function(req, res) {
 	}
 
 
-	scheduleController.getReportIntervals = async function(userNames, dateFrom, dateTo, socket) {
+	scheduleController.getReportIntervals = async function(userNames, dateTimeFrom, dateTimeTo, socket, username) {
 		var usersFreeTimeArray = new Array();
 		var reportTimesArray = new Array();
 		var users = new Array();
@@ -438,12 +585,12 @@ scheduleController.getAllUsers = function(req, res) {
 		}
 
 		console.log(userNames);
-		console.log(dateFrom);
-		console.log(dateTo);
-		
+		console.log(dateTimeFrom);
+		console.log(dateTimeTo);
+
 		if (usersFindingWasCompleted) {
 			for (var user of users) {
-				var curUserFreeTimeArray = scheduleController.getUserTaskFreeTime(user, dateFrom, dateTo);
+				var curUserFreeTimeArray = scheduleController.getUserTaskFreeTime(user, dateTimeFrom, dateTimeTo);
 				for (var interval of curUserFreeTimeArray) {
 					 reportTimesArray[reportTimesArray.length] = interval.from;
 					 reportTimesArray[reportTimesArray.length] = interval.to;
@@ -463,7 +610,7 @@ scheduleController.getAllUsers = function(req, res) {
 				var curDateTimeFrom = reportTimesArray[i];
 				var curDateTimeTo = reportTimesArray[i+1];
 
-				if (curDateTimeTo<=dateTo) {
+				if (curDateTimeTo<=dateTimeTo) {
 
 					var curIntervalUsers = new Array();
 
@@ -488,6 +635,13 @@ scheduleController.getAllUsers = function(req, res) {
 
 			if (socket!==undefined)
 				socket.emit('mapping', reportIntervalsArray);
+
+			if (username!==undefined) {
+					console.log("Saving search data for user '" + username +"' ..." );
+					scheduleController.addSearch(username, dateTimeFrom, dateTimeTo, userNames, socket);
+			}
+
+
 		}
 
 	 	return reportIntervalsArray;
@@ -495,62 +649,80 @@ scheduleController.getAllUsers = function(req, res) {
 	}
 
 
-
-
-
-
-
-
 //var socket = require("../socket/socket.js");
 
 scheduleController.addTask = function(req, res) {
-	var curUserTaskList = req.user.taskList;
+	var user = req.user;
+	var newTask = req.query;
 
-	var dateTimeFrom = scheduleController.getDateTime(req.query.dateFrom, req.query.timeFrom);
-	var dateTimeTo = scheduleController.getDateTime(req.query.dateTo, req.query.timeTo);
-
-	var maxNumberInTaskList = getMaxNumberInTaskList(curUserTaskList);
-	var editedTask = {"name": (req.query.name==undefined)?"":req.query.name,
-					"comment": (req.query.comment==undefined)?"":req.query.comment,
-					"dateFrom": req.query.dateFrom,
-					"timeFrom": req.query.timeFrom,
-					"dateTimeFrom": dateTimeFrom,
-					"dateTo": req.query.dateTo,
-					"timeTo": req.query.timeTo,
-					"dateTimeTo": dateTimeTo,
-					"visibility": (req.query.visibility==undefined)?false:true,
-					"editable": (req.query.editable==undefined)?false:true,
-					"taskNumber":maxNumberInTaskList+1,
-					"subscriberList":new Array()};
-
-	curUserTaskList[curUserTaskList.length] = editedTask;
-
-	var io = socket.getIO();
-	var subscriberList = req.user.subscriberList;
-
-	if (editedTask.visibility) {
-		var message = "Task '" + editedTask.name + "' " + "was added!"
-		notify(subscriberList, req.user.username, message, io);
-	}
-
-
-	User.updateOne({_id:req.user._id}, {taskList:curUserTaskList}, function(err, users){
-
-        if(err) return console.log(err);
-    });
+	scheduleController.addTaskCommand(user, newTask);
 	res.redirect('/');
 }
 
-scheduleController.deleteTask = function(req, res) {
-	//console.log(req.query);
-	//console.log(req.user);
-//	var removedTaskName = req.user.taskList[req.query.taskId].name;
-	//console.log(removedTask);
+scheduleController.addTaskCommand = function(user, task) {
+	var curUserTaskList = user.taskList;
+
+	var dateTimeFrom = scheduleController.getDateTime(task.dateFrom, task.timeFrom);
+	var dateTimeTo = scheduleController.getDateTime(task.dateTo, task.timeTo);
+
+	var maxNumberInTaskList = getMaxNumberInTaskList(curUserTaskList);
+	var newTask = {"name": (task.name==undefined)?"":task.name,
+					"comment": (task.comment==undefined)?"":task.comment,
+					"dateFrom": task.dateFrom,
+					"timeFrom": task.timeFrom,
+					"dateTimeFrom": dateTimeFrom,
+					"dateTo": task.dateTo,
+					"timeTo": task.timeTo,
+					"dateTimeTo": dateTimeTo,
+					"visibility": ((task.visibility==undefined)||(task.visibility==false))?false:true,
+					"editable": ((task.editable==undefined)||(task.editable==false))?false:true,
+					"completed": ((task.completed==undefined)||(task.completed==false))?false:true,
+					"taskNumber":maxNumberInTaskList+1,
+					"subscriberList":new Array()};
+
+	curUserTaskList[curUserTaskList.length] = newTask;
 
 	var io = socket.getIO();
-	var subscriberList = req.user.subscriberList;
-	var userTaskList = req.user.taskList;
-	var deletedTask = userTaskList[req.query.taskId];
+	var subscriberList = user.subscriberList;
+
+	if (newTask.visibility) {
+		var message = "Task '" + newTask.name + "' " + "was added!"
+		var shortTask = scheduleController.getShortTask(newTask);
+		notify(subscriberList, user.username, message, shortTask, io);
+	}
+
+
+	User.updateOne({_id:user._id}, {taskList:curUserTaskList}, function(err, users){
+
+        if(err) return console.log(err);
+    });
+}
+
+scheduleController.deleteTask = function(req, res) {
+	var user = req.user;
+	var taskId = req.query.taskId;
+
+	scheduleController.deleteTaskCommand(user, taskId);
+	res.redirect('/');
+}
+
+scheduleController.deleteTaskCommand = function(user, taskId) {
+	var io = socket.getIO();
+	var subscriberList = user.subscriberList;
+	var userTaskList = user.taskList;
+	//var deletedTask = userTaskList[taskId];
+	console.log(taskId);
+	var deletedTask;
+	for (task of userTaskList) {
+		if (task.taskNumber==taskId) {
+			deletedTask = task;
+			console.log(deletedTask);
+			break;
+		}
+	}
+
+
+
 	var deletedTaskSubscriberList = deletedTask.subscriberList;
 
 	var resultSubscriberList;
@@ -562,83 +734,137 @@ scheduleController.deleteTask = function(req, res) {
 
 	if (deletedTask.visibility) {
 		var message = "Task '" + deletedTask.name + "' " + "was deleted!"
-		notify(resultSubscriberList, req.user.username, message, io);
+		notify(resultSubscriberList, user.username, message, null, io);
 	}
 
-//	var newTaskList = req.user.taskList;
-	userTaskList.splice(req.query.taskId, 1);
-	//console.log(taskList);
 
-	User.updateOne({_id:req.user._id}, {taskList:userTaskList}, function(err, users){
+//	var newTaskList = req.user.taskList;
+//	userTaskList.splice(taskId, 1);
+	userTaskList = userTaskList.filter(task=>task.taskNumber!=taskId);
+	console.log(userTaskList);
+
+	User.updateOne({_id:user._id}, {taskList:userTaskList}, function(err, users){
 		if(err) return console.log(err);
 	});
-
-
-
-	res.redirect('/');
 }
 
 var socket = require("../socket/socket.js");
 
 scheduleController.editTask = function(req, res) {
-	var curUserTaskList = req.user.taskList;
-	var editedTaskSubscriberList = curUserTaskList[req.query.editedTask].subscriberList;
+	var user = req.user;
+	var task = req.query;
+	var taskId = parseInt(task.editedTask);
 
-	var dateTimeFrom = scheduleController.getDateTime(req.query.dateFrom, req.query.timeFrom);
-	var dateTimeTo = scheduleController.getDateTime(req.query.dateTo, req.query.timeTo);
+	scheduleController.editTaskCommand(user, task, taskId);
+  res.redirect('/');
+}
 
-	var editedTask = {"name": (req.query.name==undefined)?"":req.query.name,
-					"comment": (req.query.comment==undefined)?"":req.query.comment,
-					"dateFrom": req.query.dateFrom,
-					"timeFrom": req.query.timeFrom,
+scheduleController.editTaskCommand = function(user, task, taskId) {
+
+	var curUserTaskList = user.taskList;
+//	var taskId = parseInt(task.editedTask);
+
+	var editedTask;
+	var index;
+	for (let task of curUserTaskList) {
+		if (task.taskNumber==taskId) {
+			editedTask = task;
+			index = curUserTaskList.indexOf(task);
+			console.log(index);
+			break;
+		}
+	}
+
+	console.log(editedTask);
+	var editedTaskSubscriberList = editedTask.subscriberList;
+//	var editedTaskSubscriberList = curUserTaskList[task.editedTask].subscriberList;
+
+	var dateTimeFrom = scheduleController.getDateTime(task.dateFrom, task.timeFrom);
+	var dateTimeTo = scheduleController.getDateTime(task.dateTo, task.timeTo);
+
+	var editedTask = {"name": (task.name==undefined)?"":task.name,
+					"comment": (task.comment==undefined)?"":task.comment,
+					"dateFrom": task.dateFrom,
+					"timeFrom": task.timeFrom,
 					"dateTimeFrom": dateTimeFrom,
-					"dateTo": req.query.dateTo,
-					"timeTo": req.query.timeTo,
+					"dateTo": task.dateTo,
+					"timeTo": task.timeTo,
 					"dateTimeTo": dateTimeTo,
-					"visibility": (req.query.visibility==undefined)?false:true,
-					"editable": (req.query.editable==undefined)?false:true,
-				"taskNumber":parseInt(req.query.editedTask),
+					"visibility": ((task.visibility==undefined)||(task.visibility==false))?false:true,
+					"editable": ((task.editable==undefined)||(task.editable==false))?false:true,
+					"completed": ((task.completed==undefined)||(task.completed==false))?false:true,
+				"taskNumber":taskId,
 				"subscriberList":(editedTaskSubscriberList==undefined)?new Array():editedTaskSubscriberList};
 
 	var io = socket.getIO();
-	var subscriberList = req.user.subscriberList;
+	var subscriberList = user.subscriberList;
 
 	var resultSubscriberList;
 	if (editedTaskSubscriberList!==null)
 		resultSubscriberList  = subscriberList.concat(editedTaskSubscriberList.filter(a=>subscriberList.indexOf(a)===-1));
 	else resultSubscriberList  = subscriberList;
-	console.log(resultSubscriberList);
 
-	if (editedTask.visibility) {
+	var oldTask = curUserTaskList[index];
+	curUserTaskList[index] = editedTask;
+	var difference = scheduleController.compareTasks(oldTask, editedTask);
+	console.log(difference);
+
+
+	if ((editedTask.visibility)&&(!(_.isEmpty(difference)))) {
 		var message = "Task '" + editedTask.name + "' " + "was changed!"
-		notify(resultSubscriberList, req.user.username, message, io);
+		notify(resultSubscriberList, user.username, message, difference, io);
 	}
 
-	curUserTaskList[req.query.editedTask] = editedTask;
 
-
-	User.updateOne({_id:req.user._id}, {taskList:curUserTaskList}, function(err, users){
-
+	User.updateOne({_id:user._id}, {taskList:curUserTaskList}, function(err, users){
+				console.log("Edit completed!");
         if(err) return console.log(err);
     });
-
-    res.redirect('/');
 }
 
-scheduleController.getTasks = function(data, /*io*/socket) {
 
+scheduleController.compareTasks = function(oldTask, newTask) {
+	var difference = {};
+
+	if (oldTask.name!=newTask.name)
+		difference.name = oldTask.name + "->" + newTask.name;
+	if (oldTask.comment!=newTask.comment)
+		difference.comment = oldTask.comment + "->" + newTask.comment;
+	if ((oldTask.dateFrom!=newTask.dateFrom)||(oldTask.timeFrom!=newTask.timeFrom))
+		difference.dateTimeFrom = ((oldTask.dateTimeFrom==null)?"??":oldTask.dateTimeFrom) + "->" + ((newTask.dateTimeFrom==null)?"??":newTask.dateTimeFrom);
+	if ((oldTask.dateTo!=newTask.dateTo)||(oldTask.timeTo!=newTask.timeTo))
+		difference.dateTimeTo = ((oldTask.dateTimeTo==null)?"??":oldTask.dateTimeTo) + "->" + ((newTask.dateTimeTo==null)?"??":newTask.dateTimeTo);
+
+	return difference;
+}
+
+scheduleController.getShortTask = function(fullTask) {
+	var shortTask = {};
+
+	if (fullTask.name!=null)
+		shortTask.name = fullTask.name;
+	if (fullTask.comment!=null)
+		shortTask.comment = fullTask.comment;
+	if (fullTask.dateTimeFrom!=null)
+		shortTask.dateTimeFrom = fullTask.dateTimeFrom;
+	if (fullTask.dateTimeTo!=null)
+		shortTask.dateTimeTo = fullTask.dateTimeTo;
+
+	return shortTask;
+}
+
+
+scheduleController.getTasks = function(data, /*io*/socket) {
 	User.find({$or:[{username:{"$regex":data}}, {name:{"$regex":data}}, {surname:{"$regex":data}}]}, function(err, docs){
 	//User.find({username: data}, function(err, docs){
 		if(err) return console.log(err);
 
 		for(var user of docs) {
-
 			var taskList = user.taskList;
 			var publicTaskList = getPublicTaskList(taskList);
 			user.taskList = publicTaskList;
 		}
 		socket.emit('search', docs);
-
 	});
 
 }
@@ -655,11 +881,92 @@ scheduleController.getTaskById = function(username, taskId, socket) {
 	});
 }
 
-function notify(subscriberList, from, changeDescription, io) {
+scheduleController.getNotifications = function(username, socket) {
+
+	User.findOne({username:username}, function(err, user){
+		if(err) return console.log(err);
+		var reversedNotificationsList = user.notificationsList.reverse();
+		console.log(reversedNotificationsList);
+		socket.emit('notifications', reversedNotificationsList);
+	});
+}
+
+scheduleController.changeNotificationStatus = function(username, unreadNotifications) {
+	User.findOne({username:username}, function(err, user){
+		if(err) return console.log(err);
+		var notifications = user.notificationsList;
+
+		if (notifications==null) return;
+
+		if (unreadNotifications==null) return;
+
+		for (unreadNotification of unreadNotifications) {
+
+				var dateTime = unreadNotification.dateTime;
+
+				var changedNotification = notifications.find(x=>x.dateTime==dateTime);
+				console.log(changedNotification);
+				var indexOfChanged = notifications.indexOf(changedNotification);
+				/*notifications[indexOfChanged] = {"dateTime": changedNotification.dateTime,
+																				"receiver": changedNotification.receiver,
+																				"sender": changedNotification.sender,
+																				"description": changedNotification.description,
+																				"additionalInfo": changedNotification.additionalInfo,
+																				"status": true};*/
+
+				notifications[indexOfChanged].status = true;
+
+				User.updateOne({username: username}, {notificationsList:notifications}, function(err, users) {
+																							console.log("Notification status was changed!");
+																			        if(err) return console.log(err);
+																			    });
+		}
+
+	});
+
+}
+
+function notify(subscriberList, from, changeDescription, additionalInfo, io) {
 	for (let subscriber of subscriberList) {
-		io.sockets.emit('changes'+"_"+subscriber, from, changeDescription);
+		var curDate = new Date();
+		io.sockets.emit('changes'+"_"+subscriber, from, changeDescription, curDate.toISOString(), additionalInfo);
+		saveNotification(subscriber, from, changeDescription, curDate.toISOString(), additionalInfo);
 	}
 }
+
+function saveNotification(receiver, sender, description, curDate, additionalInfo) {
+	User.findOne({username:receiver}, function(err, user){
+		if(err) return console.log(err);
+
+		var notifications = user.notificationsList;
+
+		console.log(curDate);
+
+		var newNotification = {"dateTime": curDate, "receiver": receiver, "sender": sender, "description": description, "status": false, "additionalInfo": additionalInfo};
+		notifications[notifications.length] = newNotification;
+
+		var resultNotificationsList;
+		if (notifications.length>10)
+			resultNotificationsList = notifications.slice(notifications.length - 10);
+		else
+			resultNotificationsList = notifications;
+
+		User.updateOne({username: receiver}, {notificationsList: resultNotificationsList}, function(err, user) {
+
+			if(err) return console.log(err);
+
+			console.log("Notification saving...")
+			console.log(receiver);
+			console.log(resultNotificationsList);
+			console.log(user);
+
+
+		});
+
+	});
+}
+
+
 
 scheduleController.subscribe = function(subscribeReceiver, newSubscriber,socket, taskNumber) {
 	User.find({username: subscribeReceiver}, function(err, docs){
@@ -733,6 +1040,58 @@ scheduleController.unsubscribe = function(unsubscribeReceiver, unsubscribedUser,
 			}
 		}
 	});
+}
+
+scheduleController.getUserSearchesList = function(username, socket) {
+	User.findOne({username: username}, function(err, user) {
+				if(err) return console.log(err);
+
+				var searchesList = user.searchesList;
+				if ((searchesList!=null)&&(searchesList.length!=0)) {
+					for (var search in searchesList) {
+					/*	var dateTimeFrom = search.dateTimeFrom;
+						var dateTimeTo = search.dateTimeTo;
+						var participantsList = search.participantsList;*/
+						console.log(search);
+					}
+					socket.emit('getUserSearchesList', searchesList.reverse());
+				}
+
+				else
+					socket.emit('getUserSearchesList', null);
+	});
+}
+
+scheduleController.addSearch = function(username, dateTimeFrom, dateTimeTo, participantsList, socket) {
+	User.findOne({username: username}, function(err, user) {
+				if(err) return console.log(err);
+
+				var searchesList = user.searchesList;
+				var newSearch = {"dateTimeFrom": dateTimeFrom, "dateTimeTo": dateTimeTo, "participantsList": participantsList};
+
+				var newSearchesList = ((searchesList==undefined)||(searchesList==null))?new Array():searchesList;
+				newSearchesList[newSearchesList.length] = newSearch;
+
+				var resultSearchesList;
+				if (newSearchesList.length>10)
+					resultSearchesList = newSearchesList.slice(newSearchesList.length - 10);
+				else
+					resultSearchesList = newSearchesList;
+
+				User.updateOne({username:username}, {searchesList:resultSearchesList}, function(err, user) {
+							if(err) return console.log(err);
+
+							console.log("Changed user: ");
+							console.log(user);
+							console.log(resultSearchesList);
+							console.log("Saving was finished!");
+
+
+					});
+					socket.emit('getUserSearchesList', resultSearchesList.reverse());
+	});
+
+
 }
 
 

@@ -7,8 +7,8 @@
 6 silly lifecycle expressapp@1.0.0~prestart: no script for prestart, continuing
 7 info lifecycle expressapp@1.0.0~start: expressapp@1.0.0
 8 verbose lifecycle expressapp@1.0.0~start: unsafe-perm in lifecycle true
-9 verbose lifecycle expressapp@1.0.0~start: PATH: /usr/share/npm/bin/node-gyp-bin:/home/lighthead/nodejs/authApp/node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/java/jdk-12.0.1/bin:/snap/bin
-10 verbose lifecycle expressapp@1.0.0~start: CWD: /home/lighthead/nodejs/authApp
+9 verbose lifecycle expressapp@1.0.0~start: PATH: /usr/share/npm/bin/node-gyp-bin:/home/lighthead/nodejs/co_planning_web/node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/java/jdk-12.0.1/bin:/snap/bin
+10 verbose lifecycle expressapp@1.0.0~start: CWD: /home/lighthead/nodejs/co_planning_web
 11 silly lifecycle expressapp@1.0.0~start: Args: [ '-c', 'node ./bin/www' ]
 12 silly lifecycle expressapp@1.0.0~start: Returned: code: 1  signal: null
 13 info lifecycle expressapp@1.0.0~start: Failed to exec start script
@@ -23,7 +23,7 @@
 14 verbose stack     at maybeClose (internal/child_process.js:925:16)
 14 verbose stack     at Process.ChildProcess._handle.onexit (internal/child_process.js:209:5)
 15 verbose pkgid expressapp@1.0.0
-16 verbose cwd /home/lighthead/nodejs/authApp
+16 verbose cwd /home/lighthead/nodejs/co_planning_web
 17 error Linux 4.15.0-50-generic
 18 error argv "/usr/bin/node" "/usr/bin/npm" "start"
 19 error node v8.10.0
