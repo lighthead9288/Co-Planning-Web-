@@ -200,11 +200,6 @@ userController.setIO = function(io, req) {
       //var from = new Date(dateTimeFrom);
       //var to = new Date(dateTimeTo);
       console.log(mappingData);
-      console.log(mappingData.dateFrom);
-      console.log(mappingData.timeFrom);
-      console.log(mappingData.dateTo);
-      console.log(mappingData.timeTo);
-      console.log(mappingData.users);
 
       var from = scheduleController.getDateTime(mappingData.dateFrom, mappingData.timeFrom);
       var to = scheduleController.getDateTime(mappingData.dateTo, mappingData.timeTo);
@@ -214,7 +209,7 @@ userController.setIO = function(io, req) {
       intervals
         .then(
           result => {
-            console.log(result);
+          //  console.log(result);
           },
           error => {
             console.log(error);

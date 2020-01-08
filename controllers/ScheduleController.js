@@ -54,6 +54,7 @@ scheduleController.extGetTaskList = function(req, res) {
 	var timeFrom = req.query.timeFrom;
 	var dateTo = req.query.dateTo;
 	var timeTo = req.query.timeTo;
+	var taskFilter = req.query.taskFilter;
 
 	var dateTimeFrom = scheduleController.getDateTimeWithoutTimeClarify(dateFrom, timeFrom);
 	console.log(dateTimeFrom);
@@ -70,23 +71,32 @@ scheduleController.extGetTaskList = function(req, res) {
 		for(let task of taskList) {
 			var curTaskDateTimeFrom = task.dateTimeFrom;
 
-			var condition;
+			//filter by dateTime
+			var dateTimeIntervalIncluding;
 
 			if ((dateTimeFrom!=undefined)&&(dateTimeTo!=undefined))
-				condition = ((curTaskDateTimeFrom>=dateTimeFrom)&&(curTaskDateTimeFrom<dateTimeTo));
+				dateTimeIntervalIncluding = ((curTaskDateTimeFrom>=dateTimeFrom)&&(curTaskDateTimeFrom<dateTimeTo));
 			else if (dateTimeFrom!=undefined)
-				condition = (curTaskDateTimeFrom>=dateTimeFrom);
+				dateTimeIntervalIncluding = (curTaskDateTimeFrom>=dateTimeFrom);
 			else if (dateTimeTo!=undefined)
-				condition = (curTaskDateTimeFrom<=dateTimeTo);
+				dateTimeIntervalIncluding = (curTaskDateTimeFrom<=dateTimeTo);
 			else break;
 
-			console.log(condition);
+			//filter by name
+			var taskNameFilterContaining  = true;
+			if ((taskFilter!="")&&(taskFilter!=undefined)) {
+				if (task.name.toLowerCase().includes(taskFilter.toLowerCase()))
+					taskNameFilterContaining = true;
+				else
+					taskNameFilterContaining = false;
+			}
 
-			if (condition)
+			if ((dateTimeIntervalIncluding)&&(taskNameFilterContaining))
 				resTaskList[resTaskList.length] = task;
+
 		}
 
-		console.log(resTaskList);
+		//console.log(resTaskList);
 
 		var response = {"username": username, "taskList": resTaskList};
 
@@ -110,7 +120,7 @@ scheduleController.extGetReportIntervals = function(req, res) {
 		.then(
 			result => {
 				// первая функция-обработчик - запустится при вызове resolve
-				console.log(result); // result - аргумент resolve
+			//	console.log(result); // result - аргумент resolve
 				res.send(result);
 			},
 			error => {
@@ -125,17 +135,16 @@ scheduleController.extGetReportIntervals = function(req, res) {
 
 scheduleController.extGetUserTaskFreeTime = function(req, res) {
 
-	var username = req.body.username;
-	var dateFrom = req.body.dateFrom;
-	var timeFrom = req.body.timeFrom;
-	var dateTo = req.body.dateTo;
-	var timeTo = req.body.timeTo;
+	var username = req.query.username;
+	var dateFrom = req.query.dateFrom;
+	var timeFrom = req.query.timeFrom;
+	var dateTo = req.query.dateTo;
+	var timeTo = req.query.timeTo;
 	var dateTimeFrom = scheduleController.getDateTime(dateFrom, timeFrom);
 	var dateTimeTo = scheduleController.getDateTime(dateTo, timeTo);
 
 	User.findOne({username:username}, function(err, user){
 		if(err) return console.log(err);
-		console.log(user);
 		var taskFreeTime = scheduleController.getUserTaskFreeTime(user, dateTimeFrom, dateTimeTo);
 		res.send(taskFreeTime);
 	});
@@ -450,13 +459,21 @@ scheduleController.getAllUsers = function(req, res) {
 		var user = scheduleController.filterUserTaskList(user);
 		var userTaskList = user.taskList;
 
-
+		var dateTimeFromYear = dateTimeFrom.getFullYear();
+		var dateTimeFromMonth = dateTimeFrom.getMonth();
+		var dateTimeFromDay = dateTimeFrom.getDate();
+		var dateTimeFromHours = dateTimeFrom.getHours();
+		var dateTimeFromMinutes = dateTimeFrom.getMinutes();
 
 		var curDate = dateTimeFrom;
-		var count = 0;
+
+		curDate.setHours(dateTimeTo.getHours());
+		curDate.setMinutes(dateTimeTo.getMinutes());
+		curDate.setDate(dateTimeFrom.getDate()-1);
+
+
 		while (curDate<dateTimeTo) {
 
-		//	console.log(curDate);
 			var curDateTimeFrom;
 			var curDateTimeTo;
 
@@ -465,11 +482,8 @@ scheduleController.getAllUsers = function(req, res) {
 			var unavailableIntervalTask;
 			for(var customInterval of customUserIntervals) {
 				var customIntervalDate = getDateValue(customInterval.from);
-			//	console.log(customIntervalDate);
 				var cd = getDateValue(curDate);
-			//	console.log(cd);
 				isCustomIntervalFounded = (customIntervalDate==cd);
-			//	console.log(isDatesSame);
 				if (isCustomIntervalFounded) {
 					curDateTimeFrom = customInterval.from;
 					curDateTimeTo = customInterval.to;
@@ -505,13 +519,13 @@ scheduleController.getAllUsers = function(req, res) {
 				 else {
 					 curDateTimeFrom = scheduleController.getDateTime(curDateString, fromTimeString);
 					 curDateTimeTo = scheduleController.getDateTime(nextDayString, toTimeString);
-		  		}
-					let unavailableIntervalTask = {
+		  	 }
+				 let unavailableIntervalTask = {
 						 "name":"User is unavailable",
 						 "dateTimeFrom": curDateTimeFrom,
 						 "dateTimeTo": curDateTimeTo
-					};
-					 userTaskList[userTaskList.length] = unavailableIntervalTask;
+				 };
+				 userTaskList[userTaskList.length] = unavailableIntervalTask;
 			 }
 			}
 
@@ -525,15 +539,14 @@ scheduleController.getAllUsers = function(req, res) {
 				 userTaskList[userTaskList.length] = unavailableIntervalTask;
 			}
 
-
-
-
-
-					count++;
 			}
 
 			//Извращенным способом возвращаем старую левую границу интервала сопоставления
-			dateTimeFrom.setDate(day-count);
+			dateTimeFrom.setFullYear(dateTimeFromYear);
+			dateTimeFrom.setMonth(dateTimeFromMonth);
+			dateTimeFrom.setDate(dateTimeFromDay);
+			dateTimeFrom.setHours(dateTimeFromHours);
+			dateTimeFrom.setMinutes(dateTimeFromMinutes);
 
 			sortJSONArrayByField(userTaskList, 'dateTimeFrom');
 
@@ -543,6 +556,7 @@ scheduleController.getAllUsers = function(req, res) {
 
 	scheduleController.getUserTaskFreeTime = function getUserTaskFreeTime(user, dateTimeFrom, dateTimeTo) {
 			var filteredUser = scheduleController.filterUserTaskList(user);
+
 			var userWithUnavailableTime = scheduleController.addUnavailableTimeToTaskList(user, dateTimeFrom, dateTimeTo);
 			console.log(userWithUnavailableTime);
 
@@ -580,13 +594,13 @@ scheduleController.getAllUsers = function(req, res) {
 				if(err) return console.log(err);
 				users[users.length] = user;
 				usersFindingWasCompleted = (userNames.indexOf(userName)==userNames.length-1);
-				console.log("Completed: " + usersFindingWasCompleted);
+			//	console.log("Completed: " + usersFindingWasCompleted);
 			});
 		}
 
-		console.log(userNames);
-		console.log(dateTimeFrom);
-		console.log(dateTimeTo);
+	//	console.log(userNames);
+	//	console.log(dateTimeFrom);
+	//	console.log(dateTimeTo);
 
 		if (usersFindingWasCompleted) {
 			for (var user of users) {
@@ -1081,8 +1095,8 @@ scheduleController.addSearch = function(username, dateTimeFrom, dateTimeTo, part
 				User.updateOne({username:username}, {searchesList:resultSearchesList}, function(err, user) {
 							if(err) return console.log(err);
 
-							console.log("Changed user: ");
-							console.log(user);
+					//		console.log("Changed user: ");
+					//		console.log(user);
 							console.log(resultSearchesList);
 							console.log("Saving was finished!");
 
