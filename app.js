@@ -7,10 +7,13 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
+var localUri = 'mongodb://localhost/authApp';
+var remoteUri = 'mongodb://lighthead:Password1@ds153003.mlab.com:53003/co-planning-db';
 
 mongoose.Promise = global.Promise;
 mongoose.set('useCreateIndex', true);
-mongoose.connect('mongodb://localhost/authApp', { useNewUrlParser: true })
+mongoose.connect(remoteUri,
+ { useNewUrlParser: true })
   .then(() =>  console.log('Connection succesful'))
   .catch((err) => console.error(err));
 

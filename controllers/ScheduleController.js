@@ -13,7 +13,7 @@ scheduleController.extAddTask = function(req, res) {
 		User.findOne({username:username}, function(err, user){
 			if(err) return console.log(err);
 			scheduleController.addTaskCommand(user, newTask);
-			res.send("Sucess!!!");
+			res.send(req.body);
 		});
 }
 
@@ -25,7 +25,7 @@ scheduleController.extDeleteTask = function(req, res) {
 	User.findOne({username:username}, function(err, user){
 		if(err) return console.log(err);
 		scheduleController.deleteTaskCommand(user, taskId);
-		res.send("Sucess!!!");
+		res.send(req.query);
 	});
 
 }
@@ -34,7 +34,8 @@ scheduleController.extEditTask = function(req, res) {
 
 	var username = req.body.username;
 	var task = req.body.task;
-	var taskId = req.body.taskId;
+	//var taskId = req.body.taskId;
+	var taskId = req.body.taskNumber;
 
 	console.log(task);
 
@@ -42,7 +43,7 @@ scheduleController.extEditTask = function(req, res) {
 		if(err) return console.log(err);
 		//var taskId = parseInt(task.editedTask);
 		scheduleController.editTaskCommand(user, task, taskId);
-		res.send("Sucess!!!");
+		res.send(req.body);
 	});
 
 }
@@ -714,7 +715,7 @@ scheduleController.addTaskCommand = function(user, task) {
 
 scheduleController.deleteTask = function(req, res) {
 	var user = req.user;
-	var taskId = req.query.taskId;
+	var taskId = req.query.taskNumber;
 
 	scheduleController.deleteTaskCommand(user, taskId);
 	res.redirect('/');
